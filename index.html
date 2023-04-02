@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head><link rel="stylesheet" href="style.css"><head>
+    <meta charset="UTF-8">
+    <title>QR Code Generator</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.min.js"></script>
+
+  </head>
+  <body>
+      <h1>QR Code Generator</h1>
+      <form action="saveQR.php" method="post">
+        <label for="input">Enter data to encode:</label><br>
+        <input type="text" id="input" name="input"><br>
+        <button type="button" onclick="generateQR()">Generate QR Code</button>
+        <input type="text" disabled name="result"></input>
+        <input type="text" name="name" placeholder="Enter name">
+        <input type="submit" name="submit" value="Save">
+      </form>
+      <br>
+      <div id="qrcode"></div>
+
+    <script>
+      function generateQR() {
+        var qr = qrcode(0, 'L');
+        qr.addData(document.getElementById('input').value);
+        qr.make();
+        document.getElementById('qrcode').innerHTML = qr.createImgTag();
+        document.querySelector("input[name=result]").disabled = false;
+        document.querySelector("input[name=result]").value = document.getElementById('input').value;
+      }
+    </script>
+
+    <!-- create a video input where it uses camera to scan QR code and show the content of the QR code, make it continuously scanning-->
+    <br>
+    <h2>Scan QR Code</h2>
+    <video id="video" width="400" height="300"></video>
+    <script>
+      var video = document.getElementById("video");
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+          video.srcObject = stream;
+          video.play();
+        });
+      }
+
+      var onlyone = 0;
+
+      var canvas = document.createElement("canvas");
+      canvas.width = 400;
+      canvas.height = 300;
+      var ctx = canvas.getContext("2d");
+
+      setInterval(function() {
+        ctx.drawImage(video, 0, 0, 400, 300);
+        var imageData = ctx.getImageData(0, 0, 400, 300);
+        var code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+        if (code) {
+          // show the output div
+          document.getElementById("output").style.display = "block";
+          // show the result in the input
+          document.querySelector("input[name=result]").value = code.data;
+          // enable the the text input
+          document.querySelector("input[name=result]").disabled = false;
+          // stop the video
+          video.pause();
+          // stop the interval
+          clearInterval();
+        }
+        }, 500);
+
+
+    </script>
+    <div id="output" style="display: none;">
+      <form action="saveQR.php" method="post">
+        <input type="text" disabled name="result"></input>
+        <input type="text" name="name" placeholder="Enter name">
+        <input type="submit" name="submit" value="Save">
+    </div>
+  </body>
+</html>
